@@ -108,12 +108,12 @@ object WallService {
         lastNotesId = 0
     }
 
-    fun notesCreateComment(note_id: Int, comment: Comments): Comments {
+    fun notesCreateComment(note_id: Int, comment: Comments): Int {
         for ((index, note) in notes.withIndex()) {
             if (note.note_id == note_id) {
                 comments += comment.copy(id = lastCommentsId++)
                 notes[index] = note.copy(comments = note.comments + comments.last())
-                return comments.last()
+                return comments.last().id
             }
         }
         throw PostNotFoundException("Заметки с таким id $note_id нет!")
@@ -283,6 +283,16 @@ fun main() {
     WallService.printNotes()
 
 
+    println(WallService.addNote(
+        Notes(1, "Заметка вторая", "Приветствие", 220124, commentsCount = 1, read_comments = 1, view_url = "URL_2", privacy = 3, comment_privacy = 3)))
+
+    println(WallService.notesCreateComment(2,
+        Comments(0,0,3333, "Комментарий №1.1"))
+    )
+    println(WallService.notesCreateComment(2,
+        Comments(0,0,44, "Комментарий №2.2")
+    ))
+    WallService.printNotes()
 
 }
 
