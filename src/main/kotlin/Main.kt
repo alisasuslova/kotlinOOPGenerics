@@ -28,12 +28,36 @@ data class Post(
     var comments: Array<Comments> = emptyArray()
 )
 
+data class Notes(
+    var note_id: Int = 0,
+    var title: String = "",
+    var text: String = "",
+    var data: Int,
+    var comments: Array<Comments> = emptyArray(),
+    var commentsCount: Int = 0, //кол-во комментариев
+    var read_comments: Int = 0, //кол-во прочитанных комментариев
+    var view_url: String = ""
+    /*var privacy_view: Boolean = false,
+    var privacy_commentw: Boolean = false,
+    var user_id: Int = 0,
+    var count: Int = 20, //до 100!
+    var sort : Boolean = false // 0 по убыванию, 1 - по возрастанию*/
+)
+
 object WallService {
     private var posts = emptyArray<Post>() // массив для хранения постов
     private var lastPostId = 0
 
     private var comments = emptyArray<Comments>() //массив для хранения комментариев к посту
     private var lastCommentsId = 1
+
+    private var notes = emptyArray<Notes>() //массив для хранения заметок
+    private var lastNotesId = 0
+
+    fun addNote(note: Notes): Notes {
+        notes += note.copy(++lastNotesId) //добавляет заметку в массив
+            return notes.last() // возращает последнюю заметку
+    }
 
 
     fun add(post: Post): Post {
@@ -60,9 +84,28 @@ object WallService {
 
     }
 
+    fun printNotes() {
+        for (note in notes) {
+            print(note)
+            println(" ")
+            println()
+        }
+    }
+
     fun clear() {
         posts = emptyArray()
         lastPostId = 0
+    }
+
+    fun notesCreateComment(note_id: Int, comment: Comments): Comments {
+        for ((index, note) in notes.withIndex()) {
+            if (note.note_id == note_id) {
+                comments += comment.copy(id = lastCommentsId++)
+                notes[index] = note.copy(comments = note.comments + comments.last())
+                return comments.last()
+            }
+        }
+        throw PostNotFoundException("Заметки с таким id $note_id нет!")
     }
 
     fun createComment(postId: Int, comment: Comments): Comments {
@@ -76,6 +119,7 @@ object WallService {
         }
         throw PostNotFoundException("Поста с id $postId нет!")
     }
+
 }
 
 
@@ -177,8 +221,6 @@ fun main() {
         )
     )
 
-    //WallService.printPosts()
-
     WallService.add(
         Post(
             postId = 3,
@@ -189,7 +231,6 @@ fun main() {
             fieldTypeDescription = "Текст записи."
         )
     )
-    //WallService.printPosts()
 
     WallService.add(
         Post(
@@ -213,7 +254,21 @@ fun main() {
     WallService.createComment(4, Comments(0, 2541, 170124, "Второй комментарий"))
 
     WallService.printPosts()
-}
 
+    WallService.addNote(
+        Notes(0, "Заметка первая", "Какой-то текст", 210124, commentsCount = 0, read_comments = 0, view_url = "URL_1"))
+
+    WallService.printNotes()
+
+    WallService.notesCreateComment(1,
+    Comments(0,0,11111, "Комментарий №1")
+    )
+    WallService.notesCreateComment(1,
+        Comments(0,0,22222, "Комментарий №2")
+    )
+
+    WallService.printNotes()
+
+}
 
 
