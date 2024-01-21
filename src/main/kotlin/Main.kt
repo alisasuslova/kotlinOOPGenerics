@@ -36,9 +36,12 @@ data class Notes(
     var comments: Array<Comments> = emptyArray(),
     var commentsCount: Int = 0, //кол-во комментариев
     var read_comments: Int = 0, //кол-во прочитанных комментариев
-    var view_url: String = ""
-    /*var privacy_view: Boolean = false,
-    var privacy_commentw: Boolean = false,
+    var view_url: String = "",
+    var privacy: Int, // Уровень доступа к заметке. Возможные значения: 0 - все пользователи, 1 -только друзья, 2 -  друзья и друзья друзей, 3 -только пользователь
+    var comment_privacy: Int, // Уровень доступа к комментариям в заметке. Возможные значения: 0 - все пользователи, 1 -только друзья, 2 -  друзья и друзья друзей, 3 -только пользователь
+    var privacy_view: String = "",
+    var privacy_comment: String = ""
+    /*var privacy_comment: Boolean = false,
     var user_id: Int = 0,
     var count: Int = 20, //до 100!
     var sort : Boolean = false // 0 по убыванию, 1 - по возрастанию*/
@@ -54,9 +57,13 @@ object WallService {
     private var notes = emptyArray<Notes>() //массив для хранения заметок
     private var lastNotesId = 0
 
-    fun addNote(note: Notes): Notes {
+    fun addNote(note: Notes): Int {
         notes += note.copy(++lastNotesId) //добавляет заметку в массив
-            return notes.last() // возращает последнюю заметку
+        if(notes.isNotEmpty() && notes.last().note_id == lastNotesId) {
+            return notes.last().note_id
+        }
+        throw PostNotFoundException("\n" +
+                "Произошла неизвестная ошибка. Заметка не была создана.")
     }
 
 
@@ -95,6 +102,10 @@ object WallService {
     fun clear() {
         posts = emptyArray()
         lastPostId = 0
+    }
+    fun clearNotes() {
+        notes = emptyArray()
+        lastNotesId = 0
     }
 
     fun notesCreateComment(note_id: Int, comment: Comments): Comments {
@@ -255,8 +266,8 @@ fun main() {
 
     WallService.printPosts()
 
-    WallService.addNote(
-        Notes(0, "Заметка первая", "Какой-то текст", 210124, commentsCount = 0, read_comments = 0, view_url = "URL_1"))
+    println(WallService.addNote(
+        Notes(0, "Заметка первая", "Какой-то текст", 210124, commentsCount = 0, read_comments = 0, view_url = "URL_1", privacy = 2, comment_privacy = 2)))
 
     WallService.printNotes()
 
@@ -266,8 +277,12 @@ fun main() {
     WallService.notesCreateComment(1,
         Comments(0,0,22222, "Комментарий №2")
     )
-
+    WallService.notesCreateComment(1,
+        Comments(100500,0,22222, "Комментарий №3")
+    )
     WallService.printNotes()
+
+
 
 }
 
