@@ -57,16 +57,6 @@ object WallService {
     private var notes = emptyArray<Notes>() //массив для хранения заметок
     private var lastNotesId = 0
 
-    fun addNote(note: Notes): Int {
-        notes += note.copy(++lastNotesId) //добавляет заметку в массив
-        if(notes.isNotEmpty() && notes.last().note_id == lastNotesId) {
-            return notes.last().note_id
-        }
-        throw PostNotFoundException("\n" +
-                "Произошла неизвестная ошибка. Заметка не была создана.")
-    }
-
-
     fun add(post: Post): Post {
         posts += post.copy(++lastPostId, likes = post.likes.copy()) //добавляет пост в массив
         return posts.last() // возращает последний пост
@@ -108,17 +98,6 @@ object WallService {
         lastNotesId = 0
     }
 
-    fun notesCreateComment(note_id: Int, comment: Comments): Int {
-        for ((index, note) in notes.withIndex()) {
-            if (note.note_id == note_id) {
-                comments += comment.copy(id = lastCommentsId++)
-                notes[index] = note.copy(comments = note.comments + comments.last())
-                return comments.last().id
-            }
-        }
-        throw PostNotFoundException("Заметки с таким id $note_id нет!")
-    }
-
     fun createComment(postId: Int, comment: Comments): Comments {
 
         for ((index, post) in posts.withIndex()) {
@@ -130,7 +109,36 @@ object WallService {
         }
         throw PostNotFoundException("Поста с id $postId нет!")
     }
+//------------------------------------------------------------------------------
+    fun addNote(note: Notes): Int {
+        notes += note.copy(++lastNotesId) //добавляет заметку в массив
+        if(notes.isNotEmpty() && notes.last().note_id == lastNotesId) {
+            return notes.last().note_id
+        }
+        throw PostNotFoundException("\n" +
+                "Произошла неизвестная ошибка. Заметка не была создана.")
+    }
 
+    fun notesCreateComment(note_id: Int, comment: Comments): Int {
+        for ((index, note) in notes.withIndex()) {
+            if (note.note_id == note_id) {
+                comments += comment.copy(id = lastCommentsId++)
+                notes[index] = note.copy(comments = note.comments + comments.last())
+                return comments.last().id
+            }
+        }
+        throw PostNotFoundException("Заметки с таким id $note_id нет!")
+    }
+
+    fun deleteNote(note_id: Int): Int {
+        val arrList = notes.toMutableList()
+        arrList.removeAt(note_id - 1)
+        notes = arrList.toTypedArray()
+        if(notes.size > 0) {
+            return 1
+        }
+        throw IndexOutOfBoundsException("Note not found")
+    }
 }
 
 
@@ -292,6 +300,10 @@ fun main() {
     println(WallService.notesCreateComment(2,
         Comments(0,0,44, "Комментарий №2.2")
     ))
+    WallService.printNotes()
+    println("------------------------------")
+    WallService.deleteNote(1)
+    //WallService.deleteNote(1) // Note not found
     WallService.printNotes()
 
 }
