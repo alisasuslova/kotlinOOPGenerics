@@ -117,9 +117,7 @@ object WallService {
         if (notes.isNotEmpty() && notes.last().note_id == lastNotesId) {
             return notes.last().note_id
         }
-        throw PostNotFoundException(
-            "\n" +
-                    "Произошла неизвестная ошибка. Заметка не была создана."
+        throw PostNotFoundException("Произошла неизвестная ошибка. Заметка не создана!"
         )
     }
 
@@ -131,7 +129,7 @@ object WallService {
                 return comments.last().commentId
             }
         }
-        throw PostNotFoundException("Заметки с таким id $note_id нет!")
+        throw PostNotFoundException("182 You can't comment this note. Заметки с таким id $note_id нет!")
     }
 
     fun deleteNote(note_id: Int): Int {
@@ -141,7 +139,7 @@ object WallService {
         if (notes.size > 0) {
             return 1
         }
-        throw IndexOutOfBoundsException("Note not found")
+        throw IndexOutOfBoundsException("180 Note not found. Заметку с таким id $note_id невозможно удалить!")
     }
 
     //ToDo
@@ -160,7 +158,7 @@ object WallService {
                 }
             }
         }
-        throw IndexOutOfBoundsException("Note not found")
+        throw IndexOutOfBoundsException("181 Access to note denied.")
     }
 
     fun editNote(note_id: Int,
@@ -174,7 +172,8 @@ object WallService {
         for ((index, note) in notes.withIndex()) {
             if (note.note_id == note_id) {
 
-                notes[index] = note.copy(title = title,
+                notes[index] = note.copy(
+                    title = title,
                     text = text,
                     privacy = privacy,
                     comment_privacy = comment_privacy,
@@ -184,7 +183,7 @@ object WallService {
                 return 1
             }
         }
-        throw IndexOutOfBoundsException("Заметка с id $note_id не найдена!")
+        throw IndexOutOfBoundsException("180 Note not found. Заметка с id $note_id не найдена!")
     }
 
 
