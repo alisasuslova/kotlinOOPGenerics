@@ -44,7 +44,10 @@ data class Notes(
     var user_id: Int, //Идентификатор пользователя, информацию о заметках которого требуется получить.
     var offset: Int, //Смещение, необходимое для выборки определенного подмножества заметок.
     var count: Int = 20, //Количество заметок, информацию о которых необходимо получить.до 100!
-    var sort: Int // 0 по убыванию, 1 - по возрастанию
+    var sort: Int,
+    var note_ids : String = ""
+
+// 0 по убыванию, 1 - по возрастанию
 )
 
 object WallService {
@@ -217,8 +220,8 @@ object WallService {
         throw PostNotFoundException("183 Access to comment denied. Комментария с id $note_id нет!")
     }
 
-    /*fun getNotes(note_id : Int, user_id : Int, offset: Int, count: Int, sort: Int ): Array<Notes> {
-        var userListNotes: Array<Notes> = emptyArray()
+    fun getNotes(note_ids : String, user_id : Int, offset: Int, count: Int, sort: Int ): List<Notes> {
+        /*
         for (note in notes) {
             if(note_id == note_id && note.user_id == user_id) {
                 note.offset = offset
@@ -229,8 +232,34 @@ object WallService {
 
                 return userListNotes
             }
+        }*/
+
+        var resultListNotes : List<Notes> = emptyList()
+        var arrayId = note_ids.split(",").toTypedArray()
+        var localCount = 0
+
+        for ((index, stringId) in arrayId.withIndex()) {
+            var note_id_1 = stringId[index].toInt()  // то что было String => Int
+            for(note in notes) {
+                if(note.note_id == note_id_1) { //нашли в массиве нужную заметку
+                    if (note.user_id == user_id) { // и id автора совпали,
+                        if(localCount < count) {  // проверяем не перешагнули ли за счетчик
+                            resultListNotes += note  //добавляем заметку в новый массив
+                            localCount++ // увеличиваем счетчик
+                        }
+                    }
+                }
+            }
         }
-    }*/
+
+        val noteComparatorSort = Comparator { data1: Int, data2: Int -> data1 - data2 }
+        val noteComparatorRevers = Comparator { data1: Int, data2: Int -> data2 - data1 }
+
+        return when (sort) {
+            1 -> listOf(resultListNotes).sortedWith(noteComparatorSort)
+            else -> listOf(resultListNotes).sortedWith(noteComparatorRevers)
+        }
+    }
 
 }
 
