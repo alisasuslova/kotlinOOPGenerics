@@ -217,7 +217,7 @@ object WallService {
         throw PostNotFoundException("183 Access to comment denied. Комментария с id $note_id нет!")
     }
 
-    fun getNotes(note_id : Int, user_id : Int, offset: Int, count: Int, sort: Int ): Array<Notes> {
+    /*fun getNotes(note_id : Int, user_id : Int, offset: Int, count: Int, sort: Int ): Array<Notes> {
         var userListNotes: Array<Notes> = emptyArray()
         for (note in notes) {
             if(note_id == note_id && note.user_id == user_id) {
@@ -230,7 +230,7 @@ object WallService {
                 return userListNotes
             }
         }
-    }
+    }*/
 
 }
 
@@ -378,7 +378,12 @@ fun main() {
                 read_comments = 0,
                 view_url = "URL_1",
                 privacy = 2,
-                comment_privacy = 2
+                comment_privacy = 2,
+                user_id = 4444,
+                offset = 0,
+                count = 0,
+                sort = 1
+
             )
         )
     )
@@ -394,7 +399,12 @@ fun main() {
                 read_comments = 0,
                 view_url = "URL_2",
                 privacy = 2,
-                comment_privacy = 2
+                comment_privacy = 2,
+                user_id = 222,
+                offset = 0,
+                count = 0,
+                sort = 1
+
             )
         )
     )
@@ -444,7 +454,11 @@ fun main() {
             read_comments = 0,
             view_url = "URL_2",
             privacy = 2,
-            comment_privacy = 2
+            comment_privacy = 2,
+            user_id = 4444,
+            offset = 0,
+            count = 0,
+            sort = 1
         )
     )
     WallService.printNotes()
@@ -467,7 +481,7 @@ fun main() {
     )
     WallService.printNotes()
 
-    println(WallService.notesEditComment(1, Comments(0, 0, 555, "Измененный комментарий")))
+    println(WallService.notesEditComment(2, Comments(0, 0, 555, "Измененный комментарий")))
     WallService.printNotes()
 
     println("----------GET NOTES-------------")
@@ -523,5 +537,3 @@ fun main() {
 
 
 }
-
-
