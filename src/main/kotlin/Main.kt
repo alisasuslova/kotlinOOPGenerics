@@ -40,16 +40,11 @@ data class Notes(
     var privacy: Int, // Уровень доступа к заметке. Возможные значения: 0 - все пользователи, 1 -только друзья, 2 -  друзья и друзья друзей, 3 -только пользователь
     var comment_privacy: Int, // Уровень доступа к комментариям в заметке. Возможные значения: 0 - все пользователи, 1 -только друзья, 2 -  друзья и друзья друзей, 3 -только пользователь
     var privacy_view: String = "",
-    var privacy_comment: String = ""
-    /*var note_ids: String = "", //Идентификаторы заметок, информацию о которых необходимо получить.
+    var privacy_comment: String = "",
     var user_id: Int, //Идентификатор пользователя, информацию о заметках которого требуется получить.
     var offset: Int, //Смещение, необходимое для выборки определенного подмножества заметок.
-    var count: Int, //Количество заметок, информацию о которых необходимо получить.*/
-
-    /*var privacy_comment: Boolean = false,
-
-    var count: Int = 20, //до 100!
-    var sort : Boolean = false // 0 по убыванию, 1 - по возрастанию*/
+    var count: Int = 20, //Количество заметок, информацию о которых необходимо получить.до 100!
+    var sort: Int // 0 по убыванию, 1 - по возрастанию
 )
 
 object WallService {
@@ -153,30 +148,32 @@ object WallService {
         val arrList = notes.toMutableList()
         arrList.removeAt(note_id - 1) // человеческий порядок с 1!
         notes = arrList.toTypedArray()
+        lastNotesId--
         if (notes.size < listNotesSize) {
             return 1
         }
         throw IndexOutOfBoundsException("180 Note not found. Заметку с таким id $note_id невозможно удалить!")
     }
 
-    /*//ToDo
     fun notesDeleteComment(note_id: Int, comment_id: Int): Int {
-        for (note in notes) {
+
+        for ((index, note) in notes.withIndex()) {
             if (note.note_id == note_id) {
-                for (comment in note.comments) {
+                for (comment in commentsNotes) {
                     if (comment.commentId == comment_id) {
-                        val arrList = comments.toMutableList()
-                        arrList.removeAt(comment_id) //????
-                        comments = arrList.toTypedArray()
-                        if (comments.size > 0) {
-                            return 1
-                        }
+                        val arrComm = commentsNotes.toMutableList()
+                        arrComm.removeAt(comment_id)
+                        lastCommentsNotesId-- //перерасчет?
+                        commentsNotes = arrComm.toTypedArray()
+                        notes[index] = note.copy(commentsNotes = note.commentsNotes)
+                        return 1
+
                     }
                 }
             }
         }
-        throw IndexOutOfBoundsException("181 Access to note denied.")
-    }*/
+        throw IndexOutOfBoundsException("181 Access to note denied. Комментарий с таким id $comment_id невозможно удалить!")
+    }
 
     fun editNote(
         note_id: Int,
@@ -205,21 +202,35 @@ object WallService {
         throw IndexOutOfBoundsException("180 Note not found. Заметка с id $note_id не найдена!")
     }
 
-    /*// Сначала проверку сделать, если ли вообще этот коммент!!!!
-    fun notesEditComment(note_id: Int, comment: Comments) {
+    // Сначала проверку сделать, если ли вообще этот коммент!!!!
+    fun notesEditComment(note_id: Int, comment: Comments): Int {
         for ((index, note) in notes.withIndex()) {
             if (note.note_id == note_id) {
-                for ((index, comment_this) in comments.withIndex()) {
+                for ((index, comment_this) in commentsNotes.withIndex()) {
                     if (comment_this.commentId == comment.commentId) {
-                        comments += comment.copy(commentId = lastCommentsId++)
-                        notes[index] = note.copy(comments = note.comments + comments.last())
+                        comment_this.text = comment.text
+                        return 1
                     }
                 }
             }
         }
         throw PostNotFoundException("183 Access to comment denied. Комментария с id $note_id нет!")
-    }*/
+    }
 
+    fun getNotes(note_id : Int, user_id : Int, offset: Int, count: Int, sort: Int ): Array<Notes> {
+        var userListNotes: Array<Notes> = emptyArray()
+        for (note in notes) {
+            if(note_id == note_id && note.user_id == user_id) {
+                note.offset = offset
+                TODO( count sort)
+
+
+                userListNotes += note
+
+                return userListNotes
+            }
+        }
+    }
 
 }
 
@@ -411,10 +422,55 @@ fun main() {
         )
     )
     WallService.printNotes()
-    /*println("---------------")
 
-    println(WallService.deleteNote(1))
-    WallService.printNotes()*/
+    println("----------Delete NOTES-------------")
+
+    println(WallService.deleteNote(2))  // => первая заметка, гда два комментария
+    WallService.printNotes()
+
+    println("----------Delete comments NOTES-------------")
+
+    println(WallService.notesDeleteComment(1, 1))
+    WallService.printNotes()
+
+    println("----------EDIT NOTES-------------")
+    WallService.addNote(
+        Notes(
+            0,
+            "EDIT NOTES",
+            "Старый текст",
+            290124,
+            commentsCount = 0,
+            read_comments = 0,
+            view_url = "URL_2",
+            privacy = 2,
+            comment_privacy = 2
+        )
+    )
+    WallService.printNotes()
+    println(WallService.editNote(2,"NEW TITLE", "NEW TEXT", 1,1, "4654", "123"))
+    WallService.printNotes()
+
+    println("----------EDIT COMMENTS IN NOTES-------------")
+
+    println(
+        WallService.notesCreateComment(
+            2,
+            Comments(0, 0, 22222, "Комментарий 2/21") // 0
+        )
+    )
+    println(
+        WallService.notesCreateComment(
+            2,
+            Comments(100500, 0, 22222, "Комментарий 2/42") // 1
+        )
+    )
+    WallService.printNotes()
+
+    println(WallService.notesEditComment(1, Comments(0, 0, 555, "Измененный комментарий")))
+    WallService.printNotes()
+
+    println("----------GET NOTES-------------")
 
 
 
