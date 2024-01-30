@@ -10,6 +10,8 @@ class WallServiceTest {
     @Before
     fun clearBeforeTest() {
         WallService.clear()
+        WallService.clearComments()
+       // WallService.clearNotes()
     }
 
     @Test
