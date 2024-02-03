@@ -44,7 +44,11 @@ data class Notes(
     var user_id: Int, //Идентификатор пользователя, информацию о заметках которого требуется получить.
     var offset: Int, //Смещение, необходимое для выборки определенного подмножества заметок.
     var count: Int = 20, //Количество заметок, информацию о которых необходимо получить.до 100!
-    var sort: Int // 0 по убыванию, 1 - по возрастанию
+    var sort: Int, // 0 по убыванию, 1 - по возрастанию
+    var note_ids : String = "",
+    var can_comment: Int, // in 1..2?
+    var arrayOfDeletedComments: Array<Comments> = emptyArray()
+
 )
 
 object WallService {
@@ -161,13 +165,13 @@ object WallService {
             if (note.note_id == note_id) {
                 for (comment in commentsNotes) {
                     if (comment.commentId == comment_id) {
+                        note.arrayOfDeletedComments += comment
                         val arrComm = commentsNotes.toMutableList()
                         arrComm.removeAt(comment_id)
-                        lastCommentsNotesId-- //перерасчет?
+                        //lastCommentsNotesId-- //перерасчет???
                         commentsNotes = arrComm.toTypedArray()
                         notes[index] = note.copy(commentsNotes = note.commentsNotes)
                         return 1
-
                     }
                 }
             }
@@ -217,20 +221,89 @@ object WallService {
         throw PostNotFoundException("183 Access to comment denied. Комментария с id $note_id нет!")
     }
 
-    fun getNotes(note_id : Int, user_id : Int, offset: Int, count: Int, sort: Int ): Array<Notes> {
-        var userListNotes: Array<Notes> = emptyArray()
-        for (note in notes) {
-            if(note_id == note_id && note.user_id == user_id) {
-                note.offset = offset
-                TODO( count sort)
+    /*fun getNotes(note_ids : String, user_id : Int, offset: Int, count: Int, sort: Int ): List<Notes> {
 
+        var resultListNotes : List<Notes> = emptyList()
+        var arrayId = note_ids.split(",").toTypedArray() // массив заданный id из строки
+        var localCount = 0
 
-                userListNotes += note
-
-                return userListNotes
+        for ((index, stringId) in arrayId.withIndex()) {
+            var note_id_1 = stringId[index].toInt()  // то что было String => Int
+            for(note in notes) {
+                if(note.note_id == note_id_1 ) { //нашли в массиве нужную заметку
+                    if (note.user_id == user_id && localCount <= count) { // и id автора совпали, и еще не перешагнули за предел кол-во заметок
+                        resultListNotes += note  //добавляем заметку в новый массив
+                        localCount++ // увеличиваем счетчик
+                        //note.data
+                        // сразу сортировка data1: Int, data2: Int -> data1 - data2 ???
+                    }
+                }
             }
         }
+
+        val noteComparatorSort = Comparator { data1: Int, data2: Int -> data1 - data2 }
+        val noteComparatorRevers = Comparator { data1: Int, data2: Int -> data2 - data1 }
+
+        return when (sort) {
+            1 -> resultListNotes.sortedDescending(noteComparatorRevers)
+            else -> resultListNotes.sorted(noteComparatorSort)
+        }
+    }*/
+
+    fun getNotesById(note_id: Int): String {
+        for (note in notes) {
+            if (note.note_id == note_id) {
+                return "Заметка с id=$note_id имеет следующие параметры: privacy - ${note.privacy}, comment_privacy - ${note.comment_privacy}, can_comment - ${note.can_comment}"
+            }
+        }
+        throw PostNotFoundException("183 Access to comment denied. Заметки с id $note_id нет!")
     }
+
+    /*fun getNotesComments(note_id : Int, sort: Int, offset: Int, count: Int): Array<Comments> {
+
+        var newArrayOfComments: Array<Comments> = emptyArray()
+
+        for(note in notes) {
+            if(note.note_id == note_id) {
+                newArrayOfComments += note.commentsNotes
+            }
+        }
+        val noteComparatorSort = Comparator { data1: Int, data2: Int -> data1 - data2 }
+        val noteComparatorRevers = Comparator { data1: Int, data2: Int -> data2 - data1 }
+
+        when (sort) {
+            1 -> newArrayOfComments.sortedDescending(noteComparatorRevers)
+            else -> newArrayOfComments.sorted(noteComparatorSort)
+        }
+
+        if(newArrayOfComments.size <= count) {
+            return newArrayOfComments
+        }
+        throw PostNotFoundException("181 Access to note denied")
+    }*/
+
+    fun restoreNotesComment(note_id : Int, comment_id: Int): Comments {
+
+        for(note in notes) {
+            if(note.note_id == note_id) {
+                for(comment in note.commentsNotes) {
+                    if(comment.commentId == comment_id){
+                        continue
+                    } else{
+                        for(delComment in note.arrayOfDeletedComments)
+                            if(delComment.commentId == comment_id) {
+                                note.commentsNotes += delComment
+                                return delComment
+                            }
+                    }
+                }
+            }
+
+        }
+        throw PostNotFoundException("183 Access to comment denied")
+    }
+
+
 
 }
 
@@ -378,7 +451,13 @@ fun main() {
                 read_comments = 0,
                 view_url = "URL_1",
                 privacy = 2,
-                comment_privacy = 2
+                comment_privacy = 2,
+                user_id = 4444,
+                offset = 0,
+                count = 0,
+                sort = 1,
+                can_comment = 1
+
             )
         )
     )
@@ -394,7 +473,13 @@ fun main() {
                 read_comments = 0,
                 view_url = "URL_2",
                 privacy = 2,
-                comment_privacy = 2
+                comment_privacy = 2,
+                user_id = 222,
+                offset = 0,
+                count = 0,
+                sort = 1,
+                can_comment = 0
+
             )
         )
     )
@@ -444,7 +529,12 @@ fun main() {
             read_comments = 0,
             view_url = "URL_2",
             privacy = 2,
-            comment_privacy = 2
+            comment_privacy = 2,
+            user_id = 4444,
+            offset = 0,
+            count = 0,
+            sort = 1,
+            can_comment = 0
         )
     )
     WallService.printNotes()
@@ -467,61 +557,22 @@ fun main() {
     )
     WallService.printNotes()
 
-    println(WallService.notesEditComment(1, Comments(0, 0, 555, "Измененный комментарий")))
+    println(WallService.notesEditComment(2, Comments(0, 0, 555, "Измененный комментарий")))
     WallService.printNotes()
 
-    println("----------GET NOTES-------------")
+    //println("----------GET NOTES-------------")
 
+    println("----------GET NOTES BY ID-------------")
+    println(WallService.getNotesById(1))
 
+    //println("----------GET NOTES COMMENTS-------------")
 
-/*
-    println("------------------------------")
+    println("--------RESTORE NOTES COMMENT---------")
 
-    println(
-        WallService.addNote(
-            Notes(
-                1,
-                "Заметка вторая",
-                "Приветствие",
-                220124,
-                commentsCount = 1,
-                read_comments = 1,
-                view_url = "URL_2",
-                privacy = 3,
-                comment_privacy = 3
-            )
-        )
-    )
-
-    println(
-        WallService.notesCreateComment(
-            2,
-            Comments(0, 0, 3333, "Комментарий №1.1")
-        )
-    )
-    println(
-        WallService.notesCreateComment(
-            2,
-            Comments(0, 0, 44, "Комментарий №2.2")
-        )
-    )
     WallService.printNotes()
-    println("------------------------------")
-    WallService.deleteNote(1)
-    //WallService.deleteNote(1) // Note not found
+    WallService.notesDeleteComment(1,0)
     WallService.printNotes()
-
-    println(WallService.notesDeleteComment(2, 6)) //не работает!!!
-    WallService.printNotes()
-
-    println(WallService.editNote(2, "Изменение заметки", "ТЕСТОВЫЙ ТЕКСТ!!!!", 2, 2, "www", "qqq"))
-    WallService.printNotes()
-
-    WallService.clearComments() //не работает!!!
-    println(WallService.notesEditComment(2, Comments(0, 0, 280124, "EDIT COMMENT")))
-    WallService.printNotes()*/
+    WallService.restoreNotesComment(1,0)
 
 
 }
-
-
